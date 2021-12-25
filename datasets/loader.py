@@ -20,9 +20,10 @@ class CustomDataset(Dataset):
             index = index.item()
         img_path = self.all_files[index]
         image = Image.open(img_path)
+        label = None
         if self.transform:
             image = self.transform(image)
-        return image
+        return image, label
 
 
 def get_transform(img_size):
