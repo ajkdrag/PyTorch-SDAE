@@ -1,32 +1,42 @@
 import torch.nn as nn
+from functools import reduce
+from operator import mul
 
 
 class Autoencoder(nn.Module):
     def __init__(
         self,
-        input_dims,
+        ip_shape,
         encoder_op_units,
         decoder_op_units,
         layer_activation_fn,
         output_activation_fn,
-        p=0.0,
         symmetric=True,
     ):
         super().__init__()
 
+        self.ip_shape = ip_shape
+        flattened_size = reduce(mul, ip_shape)
+
         # encoder
-        encoder_ip_units = [input_dims] + encoder_op_units[:-1]
+        encoder_ip_units = [flattened_size] + encoder_op_units[:-1]
         self.encoder = Autoencoder.get_dense_block(
-            encoder_ip_units, encoder_op_units, layer_activation_fn, p
+            encoder_ip_units,
+            encoder_op_units,
+            layer_activation_fn,
+            prefix_layers=[nn.Flatten()],
         )
 
         # decoder
         if symmetric:
             decoder_ip_units = encoder_op_units[::-1]
-        decoder_op_units = decoder_ip_units[1:] + [input_dims]
+        decoder_op_units = decoder_ip_units[1:] + [flattened_size]
 
         self.decoder = Autoencoder.get_dense_block(
-            decoder_ip_units, decoder_op_units, layer_activation_fn, 0.0, False
+            decoder_ip_units,
+            decoder_op_units,
+            layer_activation_fn,
+            activate_last_layer=False,
         )
 
         # final activation
@@ -34,14 +44,23 @@ class Autoencoder(nn.Module):
 
     @staticmethod
     def get_dense_block(
-        ip_units, op_units, activation_fn, dropout_prob, activate_last_layer=True
+        ip_units,
+        op_units,
+        activation_fn,
+        activate_last_layer=True,
+        prefix_layers=None,
+        suffix_layers=None,
     ):
-        encoder_layers = [nn.Dropout(p=dropout_prob)] if dropout_prob > 0 else []
-        encoder_layers += Autoencoder.make_dense(
+        if not prefix_layers:
+            prefix_layers = []
+        if not suffix_layers:
+            suffix_layers = []
+
+        layers = Autoencoder.make_dense(
             ip_units, op_units, activation_fn, activate_last_layer
         )
 
-        dense_block = nn.Sequential(*encoder_layers)
+        dense_block = nn.Sequential(*prefix_layers, *layers, *suffix_layers)
         dense_block.apply(Autoencoder.init_weights)
         return dense_block
 
@@ -65,4 +84,5 @@ class Autoencoder(nn.Module):
     def forward(self, x):
         encoded = self.encoder(x)
         decoded = self.output_activation_fn(self.decoder(encoded))
+        decoded = decoded.view(-1, *self.ip_shape)
         return encoded, decoded
