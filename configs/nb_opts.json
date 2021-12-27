@@ -1,0 +1,6 @@
+{
+    "epochs": 3,
+    "batch_sz": 64,
+    "img_sz": 24,
+    "data": "../data"
+}

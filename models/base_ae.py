@@ -10,6 +10,7 @@ class BaseAE:
         self.hyps = hyps
         self.criterion = self.create_criterion()
         self.optimizer = self.create_optimizer()
+        self.network.to(device)
 
     def create_criterion(self):
         return nn.MSELoss()
@@ -24,9 +25,11 @@ class BaseAE:
         for img, _ in dataloader:
             yield img
 
-    def fit_one_cycle(self, dataloader):
+    def fit_one_cycle(self, dataloader, max_batches):
         Output = namedtuple("Output", ["loss", "reconstruction", "encoded"])
-        for img in self.yield_data(dataloader):
+        for batch_id, img in enumerate(self.yield_data(dataloader)):
+            if batch_id == max_batches:
+                break
             img = img.to(self.device)
             encoded, reconstructed = self.network(img)
             loss = self.compute_loss(reconstructed, img)
