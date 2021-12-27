@@ -12,6 +12,7 @@ class Trainer:
         # extract vars
         self.img_sz = self.opts["img_sz"]
         self.batch_sz = self.opts["batch_sz"]
+        self.epochs = self.opts["epochs"]
         self.device = get_device()
 
     def setup_model(self):
@@ -28,7 +29,7 @@ class Trainer:
     def setup_dataloader(self):
         self.train_loader, self.val_loader = get_dataloader(
             "mnist",
-            "data",
+            self.opts["data"],
             self.batch_sz,
             (self.img_sz, self.img_sz),
             True,
@@ -42,6 +43,7 @@ class Trainer:
         self.setup_model()
 
     def run(self):
-        single_batch = [next(iter(self.train_loader))]
-        op = self.model.fit_one_cycle(single_batch)
-        print(op.reconstruction.shape)
+        max_batches = self.opts.get("max_batches", len(self.train_loader))
+        for ep in range(self.epochs):
+            op = self.model.fit_one_cycle(self.train_loader, max_batches=max_batches)
+            print(op.loss, op.reconstruction.shape)
