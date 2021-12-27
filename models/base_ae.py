@@ -4,8 +4,7 @@ from collections import namedtuple
 
 
 class BaseAE:
-    def __init__(self, dataloader, network, device, hyps):
-        self.dataloader = dataloader
+    def __init__(self, network, device, hyps):
         self.network = network
         self.device = device
         self.hyps = hyps
@@ -21,15 +20,13 @@ class BaseAE:
     def compute_loss(self, model_op, model_ip):
         return self.criterion(model_op, model_ip)
 
-    def yield_data(self):
-        img_sz = self.hyps["img_sz"]
-        flattened_sz = img_sz * img_sz
-        for img, _ in self.dataloader:
-            yield img.view(-1, flattened_sz)
+    def yield_data(self, dataloader):
+        for img, _ in dataloader:
+            yield img
 
-    def fit_one_cycle(self):
+    def fit_one_cycle(self, dataloader):
         Output = namedtuple("Output", ["loss", "reconstruction", "encoded"])
-        for img in self.yield_data():
+        for img in self.yield_data(dataloader):
             img = img.to(self.device)
             encoded, reconstructed = self.network(img)
             loss = self.compute_loss(reconstructed, img)
