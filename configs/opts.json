@@ -1,5 +1,6 @@
 {
-    "batch_sz": 4,
+    "epochs": 6,
+    "batch_sz": 64,
     "img_sz": 24,
     "data": "data"
 }

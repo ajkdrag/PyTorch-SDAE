@@ -1,9 +1,9 @@
 import torch
 from pathlib import Path
 from PIL import Image
-from torch.utils import data
 from torch.utils.data import Dataset, DataLoader, random_split
-from torchvision import datasets, transforms
+from torchvision import datasets
+from datasets.transformations import get_transform
 
 
 class CustomDataset(Dataset):
@@ -24,13 +24,6 @@ class CustomDataset(Dataset):
         if self.transform:
             image = self.transform(image)
         return image, label
-
-
-def get_transform(img_size):
-    new_h, new_w = img_size
-    return transforms.Compose(
-        [transforms.Resize(size=(new_h, new_w)), transforms.ToTensor()]
-    )
 
 
 def get_dataloader(
