@@ -1,6 +1,10 @@
 import torch.nn as nn
 import torch.optim as optim
 from collections import namedtuple
+from utils.visualize import plot_one_list, plot_two_lists
+
+
+Output = namedtuple("Output", ["loss"])
 
 
 class BaseAE:
@@ -25,15 +29,30 @@ class BaseAE:
         for img, _ in dataloader:
             yield img
 
-    def fit_one_cycle(self, dataloader, max_batches):
-        Output = namedtuple("Output", ["loss", "reconstruction", "encoded"])
-        for batch_id, img in enumerate(self.yield_data(dataloader)):
-            if batch_id == max_batches:
-                break
-            img = img.to(self.device)
-            encoded, reconstructed = self.network(img)
-            loss = self.compute_loss(reconstructed, img)
-            self.optimizer.zero_grad()
-            loss.backward()
-            self.optimizer.step()
-        return Output(loss=loss.item(), reconstruction=reconstructed, encoded=encoded)
+    def save_ae_outputs(self, og, recon):
+        first_layer_weights = (
+            list(self.network.encoder.children())[1].weight.cpu().detach()
+        )
+        plot_two_lists(og, recon, out="outputs/recon.png")
+        plot_one_list(
+            first_layer_weights.view(-1, *og.shape[-2:]), out="outputs/weights.png"
+        )
+
+    def fit_one_cycle(self, dataloader, max_batches, training=True, save_imgs=False):
+        total_loss = 0
+        if len(dataloader) > 0:
+            for batch_id, og in enumerate(self.yield_data(dataloader)):
+                img = og.to(self.device)
+                _, reconstructed = self.network(img)
+                loss = self.compute_loss(reconstructed, img)
+                total_loss += loss.item()
+                if training:
+                    self.optimizer.zero_grad()
+                    loss.backward()
+                    self.optimizer.step()
+                if batch_id + 1 == max_batches:
+                    break
+            if save_imgs:
+                self.save_ae_outputs(og, reconstructed.cpu().detach())
+            total_loss /= len(dataloader)
+        return Output(loss=total_loss)

@@ -1,7 +1,8 @@
+import torch
 import torch.nn as nn
 from datasets.loader import get_dataloader
+from models.sparse_ae import SparseAE
 from networks.autoencoder import Autoencoder
-from models.base_ae import BaseAE
 from utils.general import get_device
 
 
@@ -17,25 +18,25 @@ class Trainer:
 
     def setup_model(self):
         network = Autoencoder(
-            (1, self.img_sz, self.img_sz),
-            [256, 128],
-            [],
-            nn.ReLU(),
-            nn.ReLU(),
+            ip_shape=(1, self.img_sz, self.img_sz),
+            encoder_op_units=[128],
+            decoder_op_units=[],
+            layer_activation_fn=nn.ReLU(),
+            output_activation_fn=nn.Sigmoid(),
             symmetric=True,
         )
-        self.model = BaseAE(network, self.device, self.hyps)
+        self.model = SparseAE(network, self.device, self.hyps)
 
     def setup_dataloader(self):
         self.train_loader, self.val_loader = get_dataloader(
-            "mnist",
-            self.opts["data"],
-            self.batch_sz,
-            (self.img_sz, self.img_sz),
-            True,
-            0.0,
-            0,
-            False,
+            dataset_type="mnist",
+            data_dir=self.opts["data"],
+            batch_size=self.batch_sz,
+            img_size=(self.img_sz, self.img_sz),
+            shuffle=True,
+            val_split=0.2,
+            num_workers=0,
+            pin_memory=False,
         )
 
     def setup(self):
@@ -45,5 +46,22 @@ class Trainer:
     def run(self):
         max_batches = self.opts.get("max_batches", len(self.train_loader))
         for ep in range(self.epochs):
-            op = self.model.fit_one_cycle(self.train_loader, max_batches=max_batches)
-            print(op.loss, op.reconstruction.shape)
+            # training
+            self.model.network.train()
+            train_op = self.model.fit_one_cycle(
+                self.train_loader, max_batches=max_batches
+            )
+            # validation
+            self.model.network.eval()
+            with torch.no_grad():
+                val_op = self.model.fit_one_cycle(
+                    self.val_loader,
+                    max_batches=max_batches,
+                    training=False,
+                    save_imgs=(True if ep == self.epochs - 1 else False),
+                )
+
+            print(
+                f"Epoch: {ep+1}/{self.epochs} | Training loss: {train_op.loss} | Validation Loss: {val_op.loss}"
+            )
+
