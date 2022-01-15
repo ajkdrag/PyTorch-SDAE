@@ -1,8 +1,8 @@
 import torch
 import torch.nn as nn
 from datasets.loader import get_dataloader
+from models.sparse_ae import SparseAE
 from networks.autoencoder import Autoencoder
-from models.base_ae import BaseAE
 from utils.general import get_device
 
 
@@ -25,7 +25,7 @@ class Trainer:
             output_activation_fn=nn.Sigmoid(),
             symmetric=True,
         )
-        self.model = BaseAE(network, self.device, self.hyps)
+        self.model = SparseAE(network, self.device, self.hyps)
 
     def setup_dataloader(self):
         self.train_loader, self.val_loader = get_dataloader(
