@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from datasets.loader import get_dataloader
-from models.sparse_ae import SparseAE
+from models.sparse_ae_kl import SparseAE
 from networks.autoencoder import Autoencoder
 from utils.general import get_device
 

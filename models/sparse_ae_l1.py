@@ -16,11 +16,10 @@ class SparseAE(BaseAE):
     def sparse_loss(self, inputs):
         loss = 0
         values = inputs
-        with torch.no_grad():
-            for layer in get_children(self.network):
-                values = layer(values)
-                if isinstance(layer, (nn.ReLU, nn.Sigmoid)):
-                    loss += torch.mean(torch.abs(values))
+        for layer in get_children(self.network):
+            values = layer(values)
+            if isinstance(layer, (nn.ReLU, nn.Sigmoid)):
+                loss += torch.mean(torch.abs(values))
         return loss
 
     def compute_loss(self, model_op, model_ip):
