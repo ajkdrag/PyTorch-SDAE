@@ -81,8 +81,10 @@ class Autoencoder(nn.Module):
                 layers.append(activation_fn)
         return layers
 
+    def reconstruct(self, x):
+        return self.output_activation_fn(self.decoder(x)).view(-1, *self.ip_shape)
+
     def forward(self, x):
         encoded = self.encoder(x)
-        decoded = self.output_activation_fn(self.decoder(encoded))
-        decoded = decoded.view(-1, *self.ip_shape)
+        decoded = self.reconstruct(encoded)
         return encoded, decoded

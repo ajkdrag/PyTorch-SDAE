@@ -1,6 +1,7 @@
 {
-    "epochs": 18,
-    "batch_sz": 128,
+    "epochs": 48,
+    "batch_sz": 256,
     "img_sz": 24,
-    "data": "data"
+    "data": "data",
+    "save_freq": 4
 }
