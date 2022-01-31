@@ -23,6 +23,7 @@ class DenoisingAE(BaseAE):
         if len(dataloader) > 0:
             for batch_id, og in enumerate(self.yield_data(dataloader)):
                 noisy_og = self.add_noise(og, mode="s&p")
+                og = og.to(self.device)
                 img = noisy_og.to(self.device)
                 _, reconstructed = self.network(img)
                 loss = self.compute_loss(reconstructed, og)

@@ -1,7 +1,7 @@
 {
-    "epochs": 6,
-    "batch_sz": 64,
-    "max_batches": 128,
+    "epochs": 240,
+    "batch_sz": 256,
     "img_sz": 24,
-    "data": "../data"
+    "data": "../../../data",
+    "save_freq": 4
 }

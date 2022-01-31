@@ -20,25 +20,25 @@ class Trainer:
         self.device = get_device()
 
     def setup_model(self):
-        # network = Autoencoder(
-        #     ip_shape=(1, self.img_sz, self.img_sz),
-        #     encoder_op_units=[256, 128],
-        #     decoder_op_units=[],
-        #     layer_activation_fn=nn.ReLU(),
-        #     output_activation_fn=nn.Sigmoid(),
-        #     symmetric=True,
-        # )
-        # self.model = SparseAE(network, self.device, self.hyps)
-        network = Stacked(
+        network = Autoencoder(
             ip_shape=(1, self.img_sz, self.img_sz),
-            list_encoder_op_units=[[256, 128], [64]],
-            list_decoder_op_units=[],
+            encoder_op_units=[256, 128],
+            decoder_op_units=[],
             layer_activation_fn=nn.ReLU(),
             output_activation_fn=nn.Sigmoid(),
             symmetric=True,
         )
-        self.model = StackedDenoisingAE(network, self.device, self.hyps)
-        # self.model = DenoisingAE(network, self.device, self.hyps)
+        # self.model = SparseAE(network, self.device, self.hyps)
+#         network = Stacked(
+#             ip_shape=(1, self.img_sz, self.img_sz),
+#             list_encoder_op_units=[[256, 128], [64]],
+#             list_decoder_op_units=[],
+#             layer_activation_fn=nn.ReLU(),
+#             output_activation_fn=nn.Sigmoid(),
+#             symmetric=True,
+#         )
+        # self.model = StackedDenoisingAE(network, self.device, self.hyps)
+        self.model = DenoisingAE(network, self.device, self.hyps)
 
     def setup_dataloader(self):
         self.train_loader, self.val_loader = get_dataloader(
