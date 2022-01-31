@@ -12,18 +12,18 @@ class BaseAE:
         self.network = network
         self.device = device
         self.hyps = hyps
-        self.criterion = self.create_criterion()
-        self.optimizer = self.create_optimizer()
+        self.create_criterion()
+        self.create_optimizer()
         self.network.to(device)
 
     def create_criterion(self):
-        return nn.MSELoss()
+        self.criterion = nn.MSELoss()
 
     def create_optimizer(self):
-        return optim.Adam(self.network.parameters(), lr=self.hyps["adam_lr"])
+        self.optimizer = optim.Adam(self.network.parameters(), lr=self.hyps["adam_lr"])
 
-    def compute_loss(self, model_op, model_ip):
-        return self.criterion(model_op, model_ip)
+    def compute_loss(self, pred, tgt):
+        return self.criterion(pred, tgt)
 
     def yield_data(self, dataloader):
         for img, _ in dataloader:
